@@ -41,17 +41,16 @@ sf project deploy start --source-dir force-app --target-org <組織の別名>
 
 | 設定 | 値 |
 |---|---|
-| コールバック URL | アプリのログイン画面「Salesforceの接続設定に使う値」に表示される URL |
+| コールバック URL | `https://yadomi-k.github.io/ARTISORA/` |
 | OAuth 範囲 | `api`、`openid` |
 | PKCE 拡張を要求 | オン |
 | Web サーバーフローの秘密が必要 | **オフ**（サーバーが無いため） |
 | 利用者 | 利用者のプロファイル／権限セットに許可 |
 
-## 4. CORS（VISORA で設定済みなら、オリジンの追加だけ）
+## 4. CORS（VISORA で設定済み）
 
-設定 → CORS
-- 「OAuth エンドポイントの CORS を有効化」をオン
-- 許可オリジンリストに、ログイン画面に表示される「CORSの許可オリジン」を追加
+許可オリジン `https://yadomi-k.github.io` は VISORA で登録済みのため、追加の設定は不要です。
+（設定 → CORS：「OAuth エンドポイントの CORS を有効化」がオン、許可オリジンリストに `https://yadomi-k.github.io`）
 
 ## 集計のルール
 

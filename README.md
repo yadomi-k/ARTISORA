@@ -1,7 +1,9 @@
 # ARTISORA（業者検索）
 
 Salesforce の発注先（商品）を検索し、実績・年度別グラフ・今期の利用・口コミをまとめて確認するアプリです。
-VISORA と同じく、`index.html` 1ファイルを claude.ai の公開ページとして公開し、ブラウザから直接 Salesforce にログインして使います。
+VISORA と同じく、`index.html` 1ファイルを GitHub Pages で公開し、ブラウザから直接 Salesforce にログインして使います。
+
+**公開URL：https://yadomi-k.github.io/ARTISORA/**
 
 **データはすべて Salesforce にあります。** アプリ側には保存しません。
 
@@ -26,6 +28,7 @@ salesforce/                口コミ用オブジェクト・権限セットの�
 docs/salesforce-setup.md   Salesforce の設定手順
 ```
 
-## 公開ページの更新
+## 公開（GitHub Pages）
 
-`index.html` を修正したら、claude.ai の同じ公開ページに再公開します。
+リポジトリの Settings → Pages で、Source を「Deploy from a branch」、Branch を `main` / `/ (root)` にします。
+`main` に push すると数分で公開URLに反映されます。
