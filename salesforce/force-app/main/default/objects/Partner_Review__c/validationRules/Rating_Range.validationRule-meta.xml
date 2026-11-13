@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rating_Range</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(Rating__c &lt; 1, Rating__c &gt; 5)</errorConditionFormula>
+    <errorDisplayField>Rating__c</errorDisplayField>
+    <errorMessage>評価は1〜5で入力してください。</errorMessage>
+</ValidationRule>

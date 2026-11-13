@@ -1,0 +1,1002 @@
+<title>ARTISORA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* ARTISORA 業者検索 — VISORA / CaseShelf と同じ配色・部品で統一する
+   レイアウト：上部バー ＋ 左に検索と発注先の一覧、右に選んだ発注先の詳細（スマートフォンは縦に並べる） */
+:root {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-border: #e6e6e6;
+  --color-text: #1c1c1e;
+  --color-text-dim: #737373;
+  --color-accent: #1d5fc4;
+  --color-accent-strong: #174fa4;
+  --color-accent-dim: #e8f0fc;
+  --color-danger: #c0392b;
+  --color-warning: #9a6b00;
+  --color-ok: #1f7a4d;
+  --star: #e3a008;
+  --star-off: #dcdcdc;
+  --bar: #9dbcea;
+  --bar-current: #1d5fc4;
+  --grid: #e3e6eb;
+  --label: #f5f6f8;
+  --topbar-h: 3.25rem;
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+@media (min-width: 1024px) { html { font-size: 17px; } }
+html, body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", "Meiryo", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-accent); outline-offset: 1px;
+}
+a { color: var(--color-accent); }
+.muted { color: var(--color-text-dim); }
+.small { font-size: 0.75rem; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- ボタン ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+  border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
+  padding: 0.5625rem 1rem; border-radius: 0.5625rem; font-size: 0.875rem; font-weight: 600; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: #f5f5f5; }
+.btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+.btn.primary:hover:not(:disabled) { background: var(--color-accent-strong); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.sm { padding: 0.3125rem 0.625rem; font-size: 0.78rem; border-radius: 0.4375rem; }
+.btn.big { width: 100%; padding: 0.75rem; font-size: 0.9375rem; }
+.btn.link { border: none; background: none; color: var(--color-accent); font-weight: 400; font-size: 0.8125rem; text-decoration: underline; }
+
+/* ---------- ログイン ---------- */
+.login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding-block: 1rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login-card {
+  width: 100%; max-width: 23rem; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 0.875rem; padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: 0.875rem; text-align: center;
+}
+.wordmark { margin: 0; font-size: 1.75rem; font-weight: 800; letter-spacing: 0.14em; color: var(--color-accent); }
+.wordmark small { display: block; font-size: 0.8125rem; letter-spacing: 0.08em; color: var(--color-text-dim); font-weight: 600; margin-top: 0.25rem; }
+.login-card p { margin: 0 0 0.5rem; font-size: 0.8125rem; }
+.setup-info { text-align: left; font-size: 0.6875rem; color: var(--color-text-dim); }
+.setup-info summary { cursor: pointer; }
+.setup-info code { display: block; word-break: break-all; background: var(--label); border-radius: 0.375rem; padding: 0.375rem 0.5rem; margin-top: 0.25rem; color: var(--color-text); }
+
+/* ---------- 上部バー ---------- */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--color-surface); }
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; height: var(--topbar-h);
+  display: flex; align-items: center; gap: 0.75rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(0.375rem); border-bottom: 1px solid var(--color-border);
+}
+.brand { display: flex; align-items: baseline; gap: 0.5rem; }
+.brand b { font-size: 1.0625rem; font-weight: 800; letter-spacing: 0.14em; color: var(--color-accent); }
+.brand span { font-size: 0.8125rem; font-weight: 700; color: var(--color-text-dim); }
+.badge { padding: 0.0625rem 0.5rem; border-radius: 999px; background: #fff3cd; color: var(--color-warning); font-size: 0.6875rem; font-weight: 700; }
+.who { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.who-name { font-size: 0.8125rem; color: var(--color-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 600px) { .who-name, .brand span { display: none; } }
+
+/* ---------- 本体 ---------- */
+.layout {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start;
+  padding-block: 1rem 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .detail-col { position: sticky; top: calc(var(--topbar-h) + 1rem); max-height: calc(100vh - var(--topbar-h) - 2rem); overflow-y: auto; }
+}
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); }
+.card-title { font-weight: 700; font-size: 1rem; }
+.card-sub { font-size: 0.75rem; color: var(--color-text-dim); font-variant-numeric: tabular-nums; }
+.card-body { padding: 0.875rem 1rem 1rem; }
+
+/* 検索 */
+.search { display: flex; flex-wrap: wrap; gap: 0.625rem 0.75rem; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.field > span { font-size: 0.6875rem; font-weight: 700; color: var(--color-text-dim); letter-spacing: 0.04em; }
+.field.grow { flex: 1 1 14rem; }
+.field input[type=search], .field select, .field textarea {
+  width: 100%; font: inherit; font-size: 0.8125rem; padding: 0.4375rem 0.5rem; border: 1px solid var(--color-border);
+  border-radius: 0.5rem; background: var(--color-surface); color: var(--color-text);
+}
+.field select { min-width: 8rem; }
+.field textarea { resize: vertical; min-height: 5.5rem; line-height: 1.6; }
+.check { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; cursor: pointer; padding-bottom: 0.4375rem; }
+.check input { margin: 0; }
+
+/* 表 */
+.table-scroll { overflow-x: auto; }
+table.list { border-collapse: collapse; width: 100%; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+table.list th { background: var(--label); color: var(--color-text-dim); font-weight: 700; text-align: left; white-space: nowrap; padding: 0.4375rem 0.625rem; border-bottom: 1px solid var(--grid); }
+table.list td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--grid); vertical-align: top; }
+table.list .r { text-align: right; white-space: nowrap; }
+table.list .nw { white-space: nowrap; }
+table.vendors tbody tr { cursor: pointer; }
+table.vendors tbody tr:hover { background: #f7f9fc; }
+table.vendors tbody tr.on { background: var(--color-accent-dim); }
+.vname { color: var(--color-accent); font-weight: 700; }
+table.vendors td:first-child { min-width: 10rem; }
+.tag { display: inline-block; font-size: 0.65rem; color: var(--color-text-dim); border: 1px solid var(--color-border); border-radius: 0.25rem; padding: 0 0.25rem; margin-left: 0.25rem; vertical-align: 1px; }
+.empty { padding: 2.5rem 1rem; text-align: center; color: var(--color-text-dim); font-size: 0.8125rem; }
+.stars { color: var(--star); letter-spacing: 0.05em; white-space: nowrap; }
+.stars i { font-style: normal; color: var(--star-off); }
+
+/* お知らせ */
+.alert { border-radius: 0.5rem; padding: 0.625rem 0.75rem; font-size: 0.8125rem; line-height: 1.6; }
+.alert.error { background: #fdeceb; color: var(--color-danger); border: 1px solid #f1c6c0; }
+.alert.warn { background: #fff8e1; color: var(--color-warning); border: 1px solid #f1dc9c; }
+.alert.info { background: var(--color-accent-dim); color: #1c4f91; border: 1px solid #c9dbf6; }
+
+/* 詳細 */
+.detail-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; padding: 1rem; border-bottom: 1px solid var(--color-border); }
+.detail-head h2 { margin: 0; font-size: 1.25rem; text-wrap: balance; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.78rem; color: var(--color-text-dim); margin-top: 0.25rem; }
+.score { text-align: right; }
+.score b { display: block; font-size: 1.625rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.score .small { display: block; margin-top: 0.125rem; }
+.section { padding: 1rem; border-bottom: 1px solid var(--color-border); }
+.section:last-child { border-bottom: none; }
+.section h3 { margin: 0 0 0.625rem; font-size: 0.9375rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.625rem; }
+.section h3 small { font-size: 0.72rem; font-weight: 400; color: var(--color-text-dim); }
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.875rem; }
+@media (max-width: 640px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart-panel { border: 1px solid var(--color-border); border-radius: 0.5rem; padding: 0.625rem 0.75rem 0.5rem; min-width: 0; }
+.chart-panel h4 { margin: 0; font-size: 0.8125rem; }
+.chart-panel .small { display: block; margin-bottom: 0.25rem; }
+.chart-box { position: relative; height: 13.5rem; }
+.legend { display: flex; gap: 0.875rem; font-size: 0.7rem; color: var(--color-text-dim); margin-top: 0.5rem; }
+.legend i { display: inline-block; width: 0.625rem; height: 0.625rem; border-radius: 2px; margin-right: 0.3125rem; vertical-align: -1px; }
+.no-usage { padding: 1.5rem 1rem; text-align: center; border: 1px dashed var(--color-border); border-radius: 0.5rem; background: var(--label); color: var(--color-text-dim); font-size: 0.875rem; }
+.total { text-align: right; font-size: 0.75rem; color: var(--color-text-dim); margin-top: 0.375rem; font-variant-numeric: tabular-nums; }
+
+/* 口コミ */
+.review-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem 0.75rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 0.5rem; background: var(--label); }
+.review-form .full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .review-form { grid-template-columns: minmax(0, 1fr); } }
+.star-input { display: flex; gap: 0.125rem; }
+.star-input button { border: none; background: none; padding: 0.125rem; font-size: 1.5rem; line-height: 1; color: var(--star-off); }
+.star-input button.on { color: var(--star); }
+.form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.form-foot .who-posts { margin-right: auto; font-size: 0.75rem; color: var(--color-text-dim); }
+.form-error { flex-basis: 100%; color: var(--color-danger); font-size: 0.75rem; white-space: pre-line; }
+.reviews { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.reviews li { padding: 0.75rem 0.125rem; border-bottom: 1px solid var(--grid); }
+.reviews li:last-child { border-bottom: none; }
+.rv-top { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.625rem; font-size: 0.72rem; color: var(--color-text-dim); }
+.chip { font-size: 0.68rem; padding: 0 0.4375rem; border-radius: 999px; background: var(--color-accent-dim); color: var(--color-accent); font-weight: 700; }
+.reviews p { margin: 0.375rem 0 0; font-size: 0.84rem; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.rv-opp { font-size: 0.72rem; color: var(--color-text-dim); margin-top: 0.25rem; }
+.placeholder { padding: 4rem 1rem; text-align: center; color: var(--color-text-dim); font-size: 0.875rem; }
+.loading { padding: 2rem 1rem; text-align: center; color: var(--color-text-dim); font-size: 0.8125rem; }
+.toast { position: fixed; left: 50%; bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--color-ok); color: #fff; padding: 0.625rem 1.125rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15); }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: rise 0.18s ease-out; } @keyframes rise { from { opacity: 0; transform: translate(-50%, 0.5rem); } } }
+</style>
+
+<div id="root"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+// =====================================================================
+// 設定
+// Salesforceの項目の「API参照名」はここにまとめています。
+// =====================================================================
+window.AppConfig = {
+  salesforce: {
+    myDomainUrl: "https://shoei.my.salesforce.com", // 会社のSalesforceの「私のドメイン」（VISORA・CaseShelfと同じ）
+    clientId: "3MVG9YDQS5WtC11pWkeuHxMae_4hzbvXdloOfQFrFln00Qv0Y0rlMTVbFZr419opGhUB_zpkoyDJOxcCoEXJn", // ARTISORA用の外部クライアントアプリのコンシューマ鍵
+  },
+  // 実績：商談商品（OpportunityLineItem）。商品（Product2）＝発注先
+  usage: {
+    costField: "FinalCost__c", // 最終（最新）原価
+    dateField: "CreatedDate", // 利用日 = 商談商品の作成日（日時。日本時間の日付に直して使う）
+    stages: ["請求", "完了"], // 実績に含める商談ステージ（請求以降）
+  },
+  // 口コミ：カスタムオブジェクト「パートナー口コミ」
+  review: {
+    object: "Partner_Review__c",
+    vendor: "Vendor__c", // 発注先（商品への参照）
+    rating: "Rating__c", // 評価 1〜5
+    category: "Category__c", // 観点
+    comment: "Comment__c", // 口コミ
+    opportunity: "Opportunity__c", // 関連商談（任意）
+    categories: ["品質", "納期", "価格", "対応", "その他"],
+  },
+  fiscalYearStartMonth: 1, // 年度は1月〜12月
+  yearsToShow: 5, // グラフに出す年度数
+  tzOffsetMinutes: 9 * 60, // 日本時間
+};
+
+// =====================================================================
+// Salesforceログイン（OAuth 2.0 認可コード + PKCE）— VISORAと同じ方式
+// サーバーを持たないため、コンシューマの秘密は使わずPKCEで保護する。
+// トークンはログアウトするまでこのブラウザ（localStorage）に保持し、ログアウト時に無効化する。
+// =====================================================================
+window.AppSSO = (function () {
+  "use strict";
+  var SS_KEY = "artisora_sf_pkce";
+  var TOKEN_KEY = "artisora_sf_session_v1";
+  var API_VERSION = "v60.0";
+  var initialParams = new URLSearchParams(window.location.search);
+
+  function config() {
+    var c = window.AppConfig.salesforce || {};
+    return { myDomainUrl: String(c.myDomainUrl || "").replace(/\/+$/, ""), clientId: String(c.clientId || "") };
+  }
+  function redirectUri() {
+    return window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+  }
+  function base64Url(bytes) {
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function randomString(len) {
+    var b = new Uint8Array(len);
+    window.crypto.getRandomValues(b);
+    return base64Url(b);
+  }
+  function sha256(text) {
+    return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (buf) { return base64Url(new Uint8Array(buf)); });
+  }
+  function saveState(o) { try { sessionStorage.setItem(SS_KEY, JSON.stringify(o)); } catch (e) {} }
+  function takeState() {
+    try { var v = sessionStorage.getItem(SS_KEY); sessionStorage.removeItem(SS_KEY); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+  }
+
+  function startLogin() {
+    var c = config();
+    if (!c.myDomainUrl || !c.clientId) return Promise.reject(new Error("Salesforceログインの設定がまだ完了していません。"));
+    if (!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("このブラウザ環境ではSalesforceログインを使えません（https で開いてください）。"));
+    var verifier = randomString(48), state = randomString(16);
+    return sha256(verifier).then(function (challenge) {
+      saveState({ verifier: verifier, state: state });
+      var p = new URLSearchParams({
+        response_type: "code", client_id: c.clientId, redirect_uri: redirectUri(),
+        code_challenge: challenge, code_challenge_method: "S256",
+        scope: "openid email profile api", state: state, prompt: "login",
+      });
+      window.location.assign(c.myDomainUrl + "/services/oauth2/authorize?" + p.toString());
+    });
+  }
+
+  function cleanUrl() { try { history.replaceState(null, "", window.location.pathname); } catch (e) {} }
+  function postForm(url, data) {
+    return fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data).toString() });
+  }
+  function networkError() {
+    return new Error("Salesforceと通信できませんでした。Salesforce側のCORS設定（このアプリのURLの許可、「OAuthエンドポイントのCORSを有効化」）を確認してください。");
+  }
+
+  var consumed = null;
+  function consumeRedirect() {
+    if (consumed) return consumed;
+    var code = initialParams.get("code"), err = initialParams.get("error"), st = initialParams.get("state");
+    if (!code && !err) return (consumed = Promise.resolve(null));
+    initialParams = new URLSearchParams();
+    cleanUrl();
+    var saved = takeState();
+    if (err) return (consumed = Promise.reject(new Error(err === "access_denied" ? "Salesforceでのログインがキャンセルされました。" : "Salesforceでのログインに失敗しました（" + err + "）。")));
+    if (!saved || st !== saved.state) return (consumed = Promise.reject(new Error("ログインの確認に失敗しました。もう一度「Salesforceでログイン」を押してください。")));
+    var c = config();
+    consumed = postForm(c.myDomainUrl + "/services/oauth2/token", {
+      grant_type: "authorization_code", code: code, client_id: c.clientId, redirect_uri: redirectUri(), code_verifier: saved.verifier,
+    })
+      .catch(function () { throw networkError(); })
+      .then(function (res) {
+        return res.json().then(function (body) {
+          if (!res.ok || !body.access_token) throw new Error("Salesforceでのログインに失敗しました（" + (body.error_description || body.error || res.status) + "）。");
+          return body;
+        });
+      })
+      .then(function (tb) {
+        return fetch(c.myDomainUrl + "/services/oauth2/userinfo", { headers: { Authorization: "Bearer " + tb.access_token } })
+          .catch(function () { throw networkError(); })
+          .then(function (res) {
+            if (!res.ok) throw new Error("Salesforceの利用者情報を取得できませんでした（" + res.status + "）。");
+            return res.json();
+          })
+          .then(function (info) {
+            var profile = { name: info.name || "", email: info.email || "", sfUserId: info.user_id || "" };
+            saveToken({ accessToken: tb.access_token, instanceUrl: tb.instance_url || c.myDomainUrl, profile: profile });
+            return profile;
+          });
+      });
+    return consumed;
+  }
+
+  function saveToken(o) { try { localStorage.setItem(TOKEN_KEY, JSON.stringify(o)); } catch (e) {} }
+  function readToken() { try { var v = localStorage.getItem(TOKEN_KEY); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function dropToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+  function getSession() { var t = readToken(); return t && t.accessToken ? { profile: t.profile || {}, instanceUrl: t.instanceUrl } : null; }
+  function endSession() {
+    var t = readToken();
+    dropToken();
+    if (t && t.accessToken) postForm(config().myDomainUrl + "/services/oauth2/revoke", { token: t.accessToken }).catch(function () {});
+  }
+  function expire() { dropToken(); try { window.dispatchEvent(new Event("artisora-session-expired")); } catch (e) {} }
+
+  function apiError(res, body) {
+    var first = Array.isArray(body) ? body[0] : body;
+    var code = (first && first.errorCode) || String(res.status);
+    var msg = (first && first.message) || "";
+    var text;
+    if (code === "INVALID_FIELD" || code === "INVALID_TYPE" || code === "MALFORMED_QUERY") text = "Salesforceの項目の設定が正しくありません（" + msg + "）。";
+    else if (code === "API_DISABLED_FOR_ORG" || code === "API_CURRENTLY_DISABLED") text = "SalesforceのAPIを利用する権限がありません。管理者にお問い合わせください。";
+    else if (code.indexOf("INSUFFICIENT_ACCESS") === 0) text = "Salesforceでこの操作を行う権限がありません（" + msg + "）。";
+    else if (code === "FIELD_CUSTOM_VALIDATION_EXCEPTION" || code === "REQUIRED_FIELD_MISSING") text = msg;
+    else text = "Salesforceとの通信でエラーが発生しました（" + code + (msg ? ": " + msg : "") + "）。";
+    var e = new Error(text); e.code = code; e.status = res.status; return e;
+  }
+
+  // Salesforce REST API を呼ぶ（GET・口コミ登録のPOST）
+  function api(path, opts) {
+    opts = opts || {};
+    var t = readToken();
+    if (!t || !t.accessToken) { expire(); return Promise.reject(new Error("Salesforceに接続されていません。ログインし直してください。")); }
+    var base = String(t.instanceUrl || config().myDomainUrl).replace(/\/+$/, "");
+    var url = base + (path.indexOf("/services/") === 0 ? path : "/services/data/" + API_VERSION + path);
+    var headers = { Authorization: "Bearer " + t.accessToken, Accept: "application/json" };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    return fetch(url, { method: opts.method || "GET", headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined })
+      .catch(function () { throw new Error("Salesforceと通信できませんでした。ネットワーク、またはSalesforce側のCORS設定を確認してください。"); })
+      .then(function (res) {
+        if (res.status === 401) { expire(); var e = new Error("Salesforceの接続の有効期限が切れました。もう一度ログインしてください。"); e.status = 401; throw e; }
+        return res.text().then(function (text) {
+          var parsed = null;
+          try { parsed = text ? JSON.parse(text) : null; } catch (e) {}
+          if (!res.ok) throw apiError(res, parsed);
+          return parsed;
+        });
+      });
+  }
+
+  // SOQLを実行し、2000件を超える場合も続きを取得してすべて返す
+  function query(soql) {
+    var out = [];
+    function next(path) {
+      return api(path).then(function (body) {
+        out = out.concat((body && body.records) || []);
+        if (body && !body.done && body.nextRecordsUrl) return next(body.nextRecordsUrl);
+        return out;
+      });
+    }
+    return next("/query?q=" + encodeURIComponent(soql));
+  }
+  function soqlString(v) { return "'" + String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
+  function soqlLike(v) { return String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/%/g, "\\%").replace(/_/g, "\\_"); }
+  function recordUrl(objectName, id) {
+    var t = readToken();
+    var base = String((t && t.instanceUrl) || config().myDomainUrl).replace(/\/+$/, "").replace(".my.salesforce.com", ".lightning.force.com");
+    return base + "/lightning/r/" + objectName + "/" + id + "/view";
+  }
+
+  return {
+    startLogin: startLogin, consumeRedirect: consumeRedirect, getSession: getSession, endSession: endSession,
+    api: api, query: query, soqlString: soqlString, soqlLike: soqlLike, recordUrl: recordUrl, redirectUri: redirectUri,
+  };
+})();
+
+// =====================================================================
+// 日付・年度
+// =====================================================================
+window.AppDate = (function () {
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function ymd(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  // 今日（日本時間）
+  function todayYmd() {
+    var now = new Date(Date.now() + AppConfig.tzOffsetMinutes * 60000);
+    return now.toISOString().slice(0, 10);
+  }
+  // 年度：開始月が1なら暦年と同じ
+  function fiscalYearOf(ymdStr) {
+    var y = Number(ymdStr.slice(0, 4)), m = Number(ymdStr.slice(5, 7)), s = AppConfig.fiscalYearStartMonth;
+    return m >= s ? y : y - 1;
+  }
+  function fiscalStart(fy) { return fy + "-" + pad(AppConfig.fiscalYearStartMonth) + "-01"; }
+  // Salesforceの日時（UTC）を日本時間の日付に直す
+  function sfDateTimeToYmd(v) {
+    if (!v) return "";
+    var s = String(v);
+    if (s.length === 10) return s;
+    s = s.replace(/([+-]\d\d)(\d\d)$/, "$1:$2");
+    var t = Date.parse(s);
+    if (isNaN(t)) return s.slice(0, 10);
+    return new Date(t + AppConfig.tzOffsetMinutes * 60000).toISOString().slice(0, 10);
+  }
+  // 日本時間の日付の0時を、SOQLの日時リテラルにする
+  function soqlDateTime(ymdStr) {
+    var o = AppConfig.tzOffsetMinutes, sign = o >= 0 ? "+" : "-", a = Math.abs(o);
+    return ymdStr + "T00:00:00" + sign + pad(Math.floor(a / 60)) + ":" + pad(a % 60);
+  }
+  function slash(ymdStr) { return String(ymdStr || "").slice(0, 10).replace(/-/g, "/"); }
+  return { ymd: ymd, todayYmd: todayYmd, fiscalYearOf: fiscalYearOf, fiscalStart: fiscalStart, sfDateTimeToYmd: sfDateTimeToYmd, soqlDateTime: soqlDateTime, slash: slash };
+})();
+
+// =====================================================================
+// Salesforceのデータ（発注先・実績・口コミ）
+//   vendors: [{ id, name, code, family, active, description }]
+//   lines:   [{ id, vendorId, oppId, oppName, accountName, stage, owner, quantity, usageDate, cost }]
+//   reviews: [{ id, vendorId, rating, category, comment, author, createdAt, oppId, oppName }]
+// =====================================================================
+window.AppSF = (function () {
+  "use strict";
+  var C = window.AppConfig;
+  var famCache = null;
+
+  function idList(ids) { return "(" + ids.map(AppSSO.soqlString).join(", ") + ")"; }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  function mapVendor(p) {
+    return { id: p.Id, name: p.Name || "", code: p.ProductCode || "", family: p.Family || "", active: !!p.IsActive, description: p.Description || "" };
+  }
+
+  function families() {
+    if (famCache) return Promise.resolve(famCache);
+    return AppSSO.api("/sobjects/Product2/describe").then(function (d) {
+      var f = (d.fields || []).filter(function (x) { return x.name === "Family"; })[0];
+      famCache = (f ? f.picklistValues : []).filter(function (v) { return v.active; }).map(function (v) { return { value: v.value, label: v.label }; });
+      return famCache;
+    });
+  }
+
+  function vendors(filter) {
+    var where = [];
+    if (filter.keyword) {
+      var k = AppSSO.soqlLike(filter.keyword);
+      where.push("(Name LIKE '%" + k + "%' OR ProductCode LIKE '%" + k + "%')");
+    }
+    if (filter.family) where.push("Family = " + AppSSO.soqlString(filter.family));
+    if (filter.activeOnly) where.push("IsActive = true");
+    var soql = "SELECT Id, Name, ProductCode, Family, IsActive, Description FROM Product2" +
+      (where.length ? " WHERE " + where.join(" AND ") : "") + " ORDER BY Name LIMIT 200";
+    return AppSSO.query(soql).then(function (rows) { return rows.map(mapVendor); });
+  }
+
+  function vendor(id) {
+    return AppSSO.query("SELECT Id, Name, ProductCode, Family, IsActive, Description FROM Product2 WHERE Id = " + AppSSO.soqlString(id))
+      .then(function (rows) { return rows[0] ? mapVendor(rows[0]) : null; });
+  }
+
+  // 商談商品（商品＝発注先）を実績として取得。from〜to は日本時間の日付（to は含まない）
+  function lines(vendorIds, fromYmd, toYmd) {
+    if (!vendorIds.length) return Promise.resolve([]);
+    var u = C.usage, chunks = [];
+    for (var i = 0; i < vendorIds.length; i += 100) chunks.push(vendorIds.slice(i, i + 100));
+    return Promise.all(chunks.map(function (ids) {
+      var soql =
+        "SELECT Id, Product2Id, OpportunityId, Opportunity.Name, Opportunity.Account.Name, Opportunity.StageName, Opportunity.Owner.Name, Quantity, " +
+        u.dateField + ", " + u.costField + " FROM OpportunityLineItem WHERE Product2Id IN " + idList(ids) +
+        " AND " + u.dateField + " >= " + AppDate.soqlDateTime(fromYmd) + " AND " + u.dateField + " < " + AppDate.soqlDateTime(toYmd) +
+        " AND Opportunity.StageName IN " + idList(u.stages) + " ORDER BY " + u.dateField + " DESC";
+      return AppSSO.query(soql);
+    })).then(function (parts) {
+      var out = [];
+      parts.forEach(function (rows) {
+        rows.forEach(function (r) {
+          var o = r.Opportunity || {};
+          out.push({
+            id: r.Id, vendorId: r.Product2Id, oppId: r.OpportunityId, oppName: o.Name || "",
+            accountName: (o.Account && o.Account.Name) || "", stage: o.StageName || "", owner: (o.Owner && o.Owner.Name) || "",
+            quantity: r.Quantity, usageDate: AppDate.sfDateTimeToYmd(r[u.dateField]), cost: num(r[u.costField]),
+          });
+        });
+      });
+      return out;
+    });
+  }
+
+  // 発注先ごとの口コミの平均と件数
+  function reviewStats(vendorIds) {
+    if (!vendorIds.length) return Promise.resolve({});
+    var r = C.review;
+    var soql = "SELECT " + r.vendor + ", AVG(" + r.rating + ") avgRating, COUNT(Id) cnt FROM " + r.object +
+      " WHERE " + r.vendor + " IN " + idList(vendorIds) + " GROUP BY " + r.vendor;
+    return AppSSO.query(soql).then(function (rows) {
+      var map = {};
+      rows.forEach(function (x) { map[x[r.vendor]] = { avg: num(x.avgRating), count: num(x.cnt) }; });
+      return map;
+    });
+  }
+
+  function reviews(vendorId) {
+    var r = C.review;
+    var rel = r.opportunity.replace(/__c$/, "__r");
+    var soql = "SELECT Id, " + r.rating + ", " + r.category + ", " + r.comment + ", " + r.opportunity + ", " + rel + ".Name, CreatedDate, CreatedBy.Name FROM " +
+      r.object + " WHERE " + r.vendor + " = " + AppSSO.soqlString(vendorId) + " ORDER BY CreatedDate DESC LIMIT 500";
+    return AppSSO.query(soql).then(function (rows) {
+      return rows.map(function (x) {
+        return {
+          id: x.Id, vendorId: vendorId, rating: num(x[r.rating]), category: x[r.category] || "", comment: x[r.comment] || "",
+          author: (x.CreatedBy && x.CreatedBy.Name) || "", createdAt: AppDate.sfDateTimeToYmd(x.CreatedDate),
+          oppId: x[r.opportunity] || "", oppName: (x[rel] && x[rel].Name) || "",
+        };
+      });
+    });
+  }
+
+  // 口コミをSalesforceに登録する
+  function addReview(v) {
+    var r = C.review, body = {};
+    body[r.vendor] = v.vendorId;
+    body[r.rating] = v.rating;
+    body[r.comment] = v.comment;
+    if (v.category) body[r.category] = v.category;
+    if (v.oppId) body[r.opportunity] = v.oppId;
+    return AppSSO.api("/sobjects/" + r.object, { method: "POST", body: body });
+  }
+
+  return { families: families, vendors: vendors, vendor: vendor, lines: lines, reviewStats: reviewStats, reviews: reviews, addReview: addReview };
+})();
+
+// =====================================================================
+// デモデータ（Salesforceに接続せずに画面を試すためのダミー）
+// 実在の会社とは関係ありません。デモで投稿した口コミは保存されず、画面を閉じると消えます。
+// =====================================================================
+window.AppDemo = (function () {
+  "use strict";
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6d2b79f5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var VENDORS = [
+    ["V-0001", "見本印刷株式会社", "印刷", true, 9], ["V-0002", "株式会社サンプル内装", "内装施工", true, 6],
+    ["V-0003", "有限会社テスト木工", "什器製作", true, 5], ["V-0004", "デモ運輸株式会社", "運送・設営", true, 8],
+    ["V-0005", "スタジオ・ダミー", "映像制作", true, 3], ["V-0006", "株式会社架空デザイン", "デザイン", true, 7],
+    ["V-0007", "例示サイン工業株式会社", "印刷", true, 4], ["V-0008", "株式会社模擬アクリル", "什器製作", true, 0],
+    ["V-0009", "検証照明株式会社", "内装施工", false, 0], ["V-0010", "株式会社参考展装", "運送・設営", true, 5],
+  ];
+  var ACCOUNTS = ["サンプル商事", "デモ電機", "仮想ミュージアム", "架空食品", "見本建設", "例示ホールディングス"];
+  var KINDS = ["企画展 設営", "常設展示更新", "展示会ブース", "ショールーム改装", "周年イベント", "展示パネル製作"];
+  var OWNERS = ["佐藤", "鈴木", "高橋", "田中"];
+  var data = null;
+  var extraReviews = [];
+
+  function build() {
+    var r = rng(20261113), pick = function (a) { return a[Math.floor(r() * a.length)]; };
+    var today = AppDate.todayYmd(), t0 = Date.parse(today + "T00:00:00Z");
+    var vendors = VENDORS.map(function (v, i) {
+      return { id: "01tDEMO" + String(i + 1).padStart(11, "0"), code: v[0], name: v[1], family: v[2], active: v[3], intensity: v[4], description: v[2] + "の協力会社" };
+    });
+    var lines = [], opp = 0;
+    vendors.forEach(function (v) {
+      for (var back = 0; back < 5 * 366; back++) {
+        var rate = (v.intensity || (back > 330 ? 3 : 0)) / 365;
+        if (r() > rate) continue;
+        var d = new Date(t0 - back * 86400000).toISOString().slice(0, 10);
+        var acc = pick(ACCOUNTS), kind = pick(KINDS), stage = r() < 0.6 ? "完了" : "請求", owner = pick(OWNERS);
+        var n = r() < 0.2 ? 2 : 1;
+        opp++;
+        for (var k = 0; k < n; k++) {
+          lines.push({
+            id: "00kDEMO" + opp + "_" + k, vendorId: v.id, oppId: "006DEMO" + String(opp).padStart(11, "0"), oppName: acc + " " + kind,
+            accountName: acc, stage: stage, owner: owner, quantity: 1 + Math.floor(r() * 3), usageDate: d, cost: Math.round((50 + r() * 950)) * 1000,
+          });
+        }
+      }
+    });
+    lines.sort(function (a, b) { return a.usageDate < b.usageDate ? 1 : a.usageDate > b.usageDate ? -1 : 0; });
+    var reviews = [
+      { vendorId: vendors[0].id, rating: 5, category: "品質", comment: "色校正への対応が早く、仕上がりも安定していました。", author: "佐藤（デモ）", createdAt: "2026-09-12" },
+      { vendorId: vendors[0].id, rating: 4, category: "納期", comment: "短納期でも相談に乗ってもらえました。繁忙期は早めの連絡が必要です。", author: "鈴木（デモ）", createdAt: "2026-06-03" },
+      { vendorId: vendors[3].id, rating: 4, category: "対応", comment: "搬入時の現場判断が的確で助かりました。", author: "高橋（デモ）", createdAt: "2026-07-21" },
+      { vendorId: vendors[2].id, rating: 3, category: "価格", comment: "品質は良いが、見積りはやや高め。", author: "田中（デモ）", createdAt: "2026-03-30" },
+    ].map(function (x, i) { x.id = "aDEMO" + i; x.oppId = ""; x.oppName = ""; return x; });
+    return { vendors: vendors, lines: lines, reviews: reviews };
+  }
+  function d() { if (!data) data = build(); return data; }
+  function allReviews() { return extraReviews.concat(d().reviews); }
+
+  return {
+    families: function () {
+      var seen = {}, out = [];
+      d().vendors.forEach(function (v) { if (!seen[v.family]) { seen[v.family] = 1; out.push({ value: v.family, label: v.family }); } });
+      return Promise.resolve(out);
+    },
+    vendors: function (f) {
+      var kw = (f.keyword || "").toLowerCase();
+      return Promise.resolve(d().vendors.filter(function (v) {
+        return (!kw || v.name.toLowerCase().indexOf(kw) >= 0 || v.code.toLowerCase().indexOf(kw) >= 0) && (!f.family || v.family === f.family) && (!f.activeOnly || v.active);
+      }));
+    },
+    vendor: function (id) { return Promise.resolve(d().vendors.filter(function (v) { return v.id === id; })[0] || null); },
+    lines: function (ids, from, to) {
+      return Promise.resolve(d().lines.filter(function (l) { return ids.indexOf(l.vendorId) >= 0 && l.usageDate >= from && l.usageDate < to; }));
+    },
+    reviewStats: function (ids) {
+      var map = {};
+      allReviews().forEach(function (x) {
+        if (ids.indexOf(x.vendorId) < 0) return;
+        var m = map[x.vendorId] || (map[x.vendorId] = { sum: 0, count: 0 });
+        m.sum += x.rating; m.count++;
+      });
+      Object.keys(map).forEach(function (k) { map[k].avg = map[k].sum / map[k].count; });
+      return Promise.resolve(map);
+    },
+    reviews: function (id) { return Promise.resolve(allReviews().filter(function (x) { return x.vendorId === id; })); },
+    addReview: function (v) {
+      extraReviews.unshift({ id: "aNEW" + Date.now(), vendorId: v.vendorId, rating: v.rating, category: v.category || "", comment: v.comment,
+        author: "デモユーザー", createdAt: AppDate.todayYmd(), oppId: v.oppId || "", oppName: v.oppName || "" });
+      return Promise.resolve({ success: true });
+    },
+  };
+})();
+
+// =====================================================================
+// 画面
+// =====================================================================
+(function () {
+  "use strict";
+  var C = window.AppConfig;
+  var root = document.getElementById("root");
+  var state = {
+    mode: null, // "sf" | "demo"
+    profile: null,
+    families: [],
+    filter: { keyword: "", family: "", minRating: "", activeOnly: true },
+    results: null, resultsError: "", searching: false, reviewsUnavailable: "",
+    selectedId: null, detail: null, detailError: "", detailLoading: false,
+  };
+  var charts = [];
+  var searchSeq = 0, detailSeq = 0;
+
+  function src() { return state.mode === "demo" ? AppDemo : AppSF; }
+  function h(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function yen(n) { return "¥" + Math.round(n || 0).toLocaleString("ja-JP"); }
+  var compact = new Intl.NumberFormat("ja-JP", { notation: "compact", maximumFractionDigits: 1 });
+  function stars(r) {
+    if (r == null) return '<span class="muted">—</span>';
+    var full = Math.round(r);
+    return '<span class="stars" aria-label="評価 ' + r.toFixed(1) + '">' + "★".repeat(full) + "<i>" + "★".repeat(5 - full) + "</i></span>";
+  }
+  function link(objectName, id, text) {
+    if (state.mode === "demo" || !id) return h(text);
+    return '<a href="' + h(AppSSO.recordUrl(objectName, id)) + '" target="_blank" rel="noopener">' + h(text) + "</a>";
+  }
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+  function currentFY() { return AppDate.fiscalYearOf(AppDate.todayYmd()); }
+  function fyRangeLabel(fy) {
+    var s = AppDate.fiscalStart(fy), e = AppDate.fiscalStart(fy + 1);
+    var last = new Date(Date.parse(e + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
+    return AppDate.slash(s) + "〜" + AppDate.slash(last);
+  }
+
+  // ---------------- ログイン ----------------
+  function renderLogin(error) {
+    destroyCharts();
+    root.innerHTML =
+      '<div class="login"><div class="login-card">' +
+      '<h1 class="wordmark">ARTISORA<small>業者検索</small></h1>' +
+      '<p class="muted">発注先の実績と口コミを、Salesforceのデータで確認できます。</p>' +
+      '<button class="btn primary big" id="loginBtn">Salesforceでログイン</button>' +
+      '<button class="btn link" id="demoBtn">デモデータで試す（ログインなし）</button>' +
+      (error ? '<div class="alert error">' + h(error) + "</div>" : "") +
+      '<details class="setup-info"><summary>Salesforceの接続設定に使う値</summary>' +
+      '<div style="margin-top:0.5rem">コールバックURL</div><code>' + h(AppSSO.redirectUri()) + "</code>" +
+      '<div style="margin-top:0.5rem">CORSの許可オリジン</div><code>' + h(window.location.origin) + "</code></details>" +
+      "</div></div>";
+    document.getElementById("loginBtn").onclick = function () {
+      var b = this; b.disabled = true; b.textContent = "Salesforceへ移動しています…";
+      AppSSO.startLogin().catch(function (e) { renderLogin(e.message); });
+    };
+    document.getElementById("demoBtn").onclick = function () { start("demo", { name: "デモユーザー" }); };
+  }
+
+  // ---------------- 本体 ----------------
+  function start(mode, profile) {
+    state.mode = mode; state.profile = profile;
+    state.results = null; state.selectedId = null; state.detail = null;
+    renderShell();
+    src().families().then(function (f) { state.families = f; renderSearchForm(); }).catch(function () {});
+    search();
+  }
+
+  function renderShell() {
+    root.innerHTML =
+      '<header class="topbar"><div class="brand"><b>ARTISORA</b><span>業者検索</span></div>' +
+      (state.mode === "demo" ? '<span class="badge">デモデータ</span>' : "") +
+      '<div class="who"><span class="who-name">' + h(state.profile.name) + (state.mode === "demo" ? "" : " さん") + "</span>" +
+      '<button class="btn sm" id="logoutBtn">' + (state.mode === "demo" ? "終了" : "ログアウト") + "</button></div></header>" +
+      '<main class="layout">' +
+      '<section class="card" aria-label="発注先の検索"><div class="card-body" id="searchForm"></div>' +
+      '<div class="card-head" style="border-top:1px solid var(--color-border)"><span class="card-title">発注先</span><span class="card-sub" id="resultSub"></span></div>' +
+      '<div id="results"></div></section>' +
+      '<section class="card detail-col" id="detail" aria-live="polite"></section>' +
+      "</main>";
+    document.getElementById("logoutBtn").onclick = function () {
+      if (state.mode === "sf") AppSSO.endSession();
+      state.mode = null; renderLogin();
+    };
+    renderSearchForm(); renderResults(); renderDetail();
+  }
+
+  function renderSearchForm() {
+    var el = document.getElementById("searchForm");
+    if (!el) return;
+    var f = state.filter;
+    el.innerHTML =
+      '<form class="search" id="sform">' +
+      '<label class="field grow"><span>キーワード（発注先名・コード）</span><input type="search" id="kw" value="' + h(f.keyword) + '" placeholder="例：印刷、V-0001"></label>' +
+      '<label class="field"><span>ファミリ</span><select id="fam"><option value="">すべて</option>' +
+      state.families.map(function (x) { return '<option value="' + h(x.value) + '"' + (x.value === f.family ? " selected" : "") + ">" + h(x.label) + "</option>"; }).join("") +
+      "</select></label>" +
+      '<label class="field"><span>評価</span><select id="rate">' +
+      [["", "すべて"], ["3", "★3以上"], ["4", "★4以上"], ["4.5", "★4.5以上"]].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === f.minRating ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+      "</select></label>" +
+      '<label class="check"><input type="checkbox" id="act"' + (f.activeOnly ? " checked" : "") + "> 有効な発注先のみ</label>" +
+      '<button class="btn primary" type="submit">検索</button></form>';
+    var form = document.getElementById("sform");
+    form.onsubmit = function (e) { e.preventDefault(); readFilter(); search(); };
+    ["fam", "rate", "act"].forEach(function (id) { document.getElementById(id).onchange = function () { readFilter(); search(); }; });
+  }
+  function readFilter() {
+    state.filter = {
+      keyword: document.getElementById("kw").value.trim(), family: document.getElementById("fam").value,
+      minRating: document.getElementById("rate").value, activeOnly: document.getElementById("act").checked,
+    };
+  }
+
+  // ① 検索：発注先（商品）＋今期の実績＋口コミの平均
+  function search() {
+    var seq = ++searchSeq, f = state.filter, fy = currentFY();
+    state.searching = true; state.resultsError = ""; renderResults();
+    var from = AppDate.fiscalStart(fy), to = AppDate.fiscalStart(fy + 1);
+    src().vendors(f).then(function (vs) {
+      var ids = vs.map(function (v) { return v.id; });
+      return Promise.all([
+        src().lines(ids, from, to),
+        src().reviewStats(ids).then(function (m) { state.reviewsUnavailable = ""; return m; }).catch(function (e) { state.reviewsUnavailable = e.message; return {}; }),
+      ]).then(function (r) {
+        var usage = {};
+        r[0].forEach(function (l) {
+          var u = usage[l.vendorId] || (usage[l.vendorId] = { count: 0, amount: 0 });
+          u.count++; u.amount += l.cost; // 利用回数 = 商談商品の件数
+        });
+        var min = Number(f.minRating) || 0;
+        return vs.map(function (v) {
+          var s = r[1][v.id], u = usage[v.id] || { count: 0, amount: 0 };
+          return Object.assign({}, v, { avg: s ? Math.round(s.avg * 10) / 10 : null, reviewCount: s ? s.count : 0, fyCount: u.count, fyAmount: u.amount });
+        }).filter(function (v) { return !min || (v.avg != null && v.avg >= min); });
+      });
+    }).then(function (items) {
+      if (seq !== searchSeq) return;
+      state.results = items; state.searching = false; renderResults();
+    }).catch(function (e) {
+      if (seq !== searchSeq) return;
+      state.searching = false; state.resultsError = e.message; renderResults();
+    });
+  }
+
+  function renderResults() {
+    var el = document.getElementById("results"), sub = document.getElementById("resultSub");
+    if (!el) return;
+    var fy = currentFY();
+    if (sub) sub.textContent = state.results ? state.results.length + "件" + (state.results.length >= 200 ? "（上限200件）" : "") + "　今期：" + fy + "年度" : "";
+    if (state.resultsError) { el.innerHTML = '<div class="card-body"><div class="alert error">' + h(state.resultsError) + "</div></div>"; return; }
+    if (!state.results || (state.searching && !state.results.length)) { el.innerHTML = '<div class="loading">読み込んでいます…</div>'; return; }
+    if (!state.results.length) { el.innerHTML = '<div class="empty">条件に合う発注先が見つかりませんでした。</div>'; return; }
+    el.innerHTML =
+      (state.reviewsUnavailable ? '<div class="card-body" style="padding-bottom:0"><div class="alert warn">口コミを読み込めませんでした：' + h(state.reviewsUnavailable) + "</div></div>" : "") +
+      '<div class="table-scroll"><table class="list vendors"><thead><tr><th>発注先名</th><th>コード</th><th>ファミリ</th><th>評価</th><th class="r">今期 利用回数</th><th class="r">今期 利用金額</th></tr></thead><tbody>' +
+      state.results.map(function (v) {
+        return '<tr data-id="' + h(v.id) + '" tabindex="0"' + (v.id === state.selectedId ? ' class="on"' : "") + ">" +
+          '<td><span class="vname">' + h(v.name) + "</span>" + (v.active ? "" : '<span class="tag">無効</span>') + "</td>" +
+          '<td class="nw">' + h(v.code) + "</td><td>" + h(v.family) + "</td>" +
+          '<td class="nw">' + stars(v.avg) + (v.avg != null ? ' <span class="muted">' + v.avg.toFixed(1) + "（" + v.reviewCount + "）</span>" : "") + "</td>" +
+          '<td class="r">' + v.fyCount + "回</td>" + '<td class="r">' + yen(v.fyAmount) + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+    el.querySelectorAll("tr[data-id]").forEach(function (tr) {
+      tr.onclick = function () { select(tr.dataset.id); };
+      tr.onkeydown = function (e) { if (e.key === "Enter") select(tr.dataset.id); };
+    });
+  }
+
+  // ---------------- 詳細 ----------------
+  function select(id, keep) {
+    state.selectedId = id;
+    document.querySelectorAll("tr[data-id]").forEach(function (tr) { tr.classList.toggle("on", tr.dataset.id === id); });
+    var seq = ++detailSeq;
+    if (!keep) { state.detail = null; state.detailError = ""; state.detailLoading = true; renderDetail(); }
+    var fy = currentFY(), firstFy = fy - (C.yearsToShow - 1);
+    var from = AppDate.fiscalStart(firstFy), to = AppDate.fiscalStart(fy + 1);
+    var cached = (state.results || []).filter(function (v) { return v.id === id; })[0];
+    Promise.all([
+      cached ? Promise.resolve(cached) : src().vendor(id),
+      src().lines([id], from, to),
+      src().reviews(id).then(function (r) { return { list: r }; }).catch(function (e) { return { error: e.message, list: [] }; }),
+    ]).then(function (r) {
+      if (seq !== detailSeq) return;
+      if (!r[0]) throw new Error("発注先が見つかりません。");
+      var years = [];
+      for (var y = firstFy; y <= fy; y++) years.push({ fy: y, count: 0, amount: 0 });
+      var current = [], opps = {}, oppList = [];
+      r[1].forEach(function (l) {
+        var yr = years[AppDate.fiscalYearOf(l.usageDate) - firstFy];
+        if (yr) { yr.count++; yr.amount += l.cost; }
+        if (AppDate.fiscalYearOf(l.usageDate) === fy) current.push(l);
+        if (!opps[l.oppId]) { opps[l.oppId] = 1; oppList.push({ id: l.oppId, name: l.oppName, date: l.usageDate }); }
+      });
+      // 利用日の新しい順（同じ日は登録の新しい順のまま）
+      current.sort(function (a, b) { return a.usageDate < b.usageDate ? 1 : a.usageDate > b.usageDate ? -1 : 0; });
+      var rv = r[2].list;
+      var avg = rv.length ? Math.round(rv.reduce(function (s, x) { return s + x.rating; }, 0) / rv.length * 10) / 10 : null;
+      state.detail = { vendor: r[0], fy: fy, years: years, current: current, opps: oppList.slice(0, 100), reviews: rv, reviewsError: r[2].error || "", avg: avg };
+      state.detailLoading = false; state.detailError = "";
+      renderDetail();
+    }).catch(function (e) {
+      if (seq !== detailSeq) return;
+      state.detailLoading = false; state.detailError = e.message; renderDetail();
+    });
+  }
+
+  function destroyCharts() { charts.forEach(function (c) { c.destroy(); }); charts = []; }
+
+  function renderDetail() {
+    var el = document.getElementById("detail");
+    if (!el) return;
+    destroyCharts();
+    if (state.detailError) { el.innerHTML = '<div class="card-body"><div class="alert error">' + h(state.detailError) + "</div></div>"; return; }
+    if (state.detailLoading) { el.innerHTML = '<div class="loading">読み込んでいます…</div>'; return; }
+    var d = state.detail;
+    if (!d) { el.innerHTML = '<div class="placeholder">一覧から発注先を選ぶと、実績と口コミを表示します。</div>'; return; }
+    var v = d.vendor, total = d.current.reduce(function (s, l) { return s + l.cost; }, 0);
+    el.innerHTML =
+      '<div class="detail-head"><div style="min-width:0"><h2>' + link("Product2", v.id, v.name) + "</h2>" +
+      '<div class="meta"><span>コード：' + h(v.code || "—") + "</span><span>ファミリ：" + h(v.family || "—") + "</span><span>" + (v.active ? "有効" : "無効") + "</span></div>" +
+      (v.description ? '<div class="meta">' + h(v.description) + "</div>" : "") + "</div>" +
+      '<div class="score"><b>' + (d.avg != null ? d.avg.toFixed(1) : "—") + "</b>" + stars(d.avg) + '<span class="small muted">口コミ ' + d.reviews.length + "件</span></div></div>" +
+
+      // ④ 年度別グラフ
+      '<div class="section"><h3>年度別の利用状況<small>' + d.years[0].fy + "〜" + d.fy + "年度（1月〜12月）</small></h3>" +
+      '<div class="charts">' +
+      '<div class="chart-panel"><h4>利用回数</h4><span class="small muted">商談商品の件数</span><div class="chart-box"><canvas id="chCount" role="img" aria-label="年度別の利用回数"></canvas></div></div>' +
+      '<div class="chart-panel"><h4>利用金額</h4><span class="small muted">最終原価の合計（円）</span><div class="chart-box"><canvas id="chAmount" role="img" aria-label="年度別の利用金額"></canvas></div></div>' +
+      '</div><div class="legend"><span><i style="background:var(--bar-current)"></i>今期</span><span><i style="background:var(--bar)"></i>過去の年度</span></div></div>' +
+
+      // ⑤ 今期の利用一覧
+      '<div class="section"><h3>今期の利用<small>' + d.fy + "年度（" + fyRangeLabel(d.fy) + "）・利用日の新しい順</small></h3>" +
+      (d.current.length
+        ? '<div class="table-scroll"><table class="list"><thead><tr><th>利用日</th><th>商談名</th><th>取引先</th><th>ステージ</th><th>担当</th><th class="r">数量</th><th class="r">最終原価</th></tr></thead><tbody>' +
+          d.current.map(function (l) {
+            return '<tr><td class="nw num">' + AppDate.slash(l.usageDate) + "</td><td>" + link("Opportunity", l.oppId, l.oppName) + "</td><td>" + h(l.accountName || "—") +
+              '</td><td class="nw">' + h(l.stage) + '</td><td class="nw">' + h(l.owner || "—") + '</td><td class="r">' + h(l.quantity == null ? "" : l.quantity) + '</td><td class="r">' + yen(l.cost) + "</td></tr>";
+          }).join("") + '</tbody></table></div><div class="total">' + d.current.length + "件　合計 " + yen(total) + "</div>"
+        : '<div class="no-usage">直近の利用はありませんでした</div>') + "</div>" +
+
+      // ② 口コミ
+      '<div class="section"><h3>口コミ<small>' + d.reviews.length + "件</small></h3>" +
+      (d.reviewsError ? '<div class="alert warn">口コミを読み込めませんでした：' + h(d.reviewsError) + "<br>Salesforceに「パートナー口コミ」オブジェクトが作成済みか、参照権限があるかを確認してください。</div>" : reviewForm(d)) +
+      (d.reviews.length
+        ? '<ul class="reviews">' + d.reviews.map(function (r) {
+            return '<li><div class="rv-top">' + stars(r.rating) + (r.category ? '<span class="chip">' + h(r.category) + "</span>" : "") +
+              "<span>" + h(r.author) + '</span><span class="num">' + AppDate.slash(r.createdAt) + "</span></div><p>" + h(r.comment) + "</p>" +
+              (r.oppName ? '<div class="rv-opp">関連商談：' + link("Opportunity", r.oppId, r.oppName) + "</div>" : "") + "</li>";
+          }).join("") + "</ul>"
+        : d.reviewsError ? "" : '<p class="muted small" style="margin:0.75rem 0 0">まだ口コミはありません。依頼したときの様子を書いて、次に頼む人の参考にしてください。</p>') +
+      "</div>";
+
+    drawCharts(d);
+    if (!d.reviewsError) bindReviewForm(d);
+  }
+
+  // 棒の上に値を表示する（小さな自作プラグイン）
+  var valueLabels = {
+    id: "valueLabels",
+    afterDatasetsDraw: function (chart, args, opts) {
+      var ctx = chart.ctx, meta = chart.getDatasetMeta(0), data = chart.data.datasets[0].data;
+      ctx.save();
+      ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif";
+      ctx.fillStyle = "#1c1c1e"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      meta.data.forEach(function (bar, i) { ctx.fillText(opts.format(data[i]), bar.x, bar.y - 4); });
+      ctx.restore();
+    },
+  };
+
+  function drawCharts(d) {
+    if (!window.Chart) return;
+    var labels = d.years.map(function (y) { return String(y.fy); });
+    var colors = d.years.map(function (y) { return y.fy === d.fy ? "#1d5fc4" : "#9dbcea"; });
+    function make(id, values, fmtValue, fmtTick, integer) {
+      var max = Math.max.apply(null, values.concat([integer ? 4 : 1]));
+      charts.push(new Chart(document.getElementById(id), {
+        type: "bar",
+        data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: "bottom", maxBarThickness: 40 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          layout: { padding: { top: 18 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { title: function (it) { return it[0].label + "年度" + (Number(it[0].label) === d.fy ? "（今期）" : ""); }, label: function (it) { return fmtValue(it.raw); } } },
+            valueLabels: { format: fmtValue },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#4a4a4a", font: { size: 11 } } },
+            y: { beginAtZero: true, suggestedMax: max * 1.15, grid: { color: "#e3e6eb" }, border: { display: false },
+              ticks: { color: "#737373", font: { size: 10 }, precision: integer ? 0 : undefined, maxTicksLimit: 5, callback: fmtTick } },
+          },
+        },
+        plugins: [valueLabels],
+      }));
+    }
+    make("chCount", d.years.map(function (y) { return y.count; }), function (n) { return n + "回"; }, function (n) { return n; }, true);
+    make("chAmount", d.years.map(function (y) { return y.amount; }), function (n) { return n >= 10000 ? compact.format(n) + "円" : n.toLocaleString("ja-JP") + "円"; }, function (n) { return compact.format(n); }, false);
+  }
+
+  // ---------------- ② 口コミの入力 ----------------
+  function reviewForm(d) {
+    return '<form class="review-form" id="rform" novalidate>' +
+      '<div class="field full"><span>評価（必須）</span><div class="star-input" role="radiogroup" aria-label="評価">' +
+      [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" data-v="' + n + '" role="radio" aria-checked="false" aria-label="★' + n + '">★</button>'; }).join("") + "</div></div>" +
+      '<label class="field"><span>観点</span><select id="rcat"><option value="">選択なし</option>' +
+      C.review.categories.map(function (c) { return "<option>" + h(c) + "</option>"; }).join("") + "</select></label>" +
+      '<label class="field"><span>関連商談（任意）</span><select id="ropp"><option value="">選択なし</option>' +
+      d.opps.map(function (o) { return '<option value="' + h(o.id) + '">' + AppDate.slash(o.date) + " " + h(o.name) + "</option>"; }).join("") + "</select></label>" +
+      '<label class="field full"><span>口コミ（必須）</span><textarea id="rtext" maxlength="2000" placeholder="品質・納期・対応など、次に依頼する人の参考になることを書いてください"></textarea></label>' +
+      '<div class="form-foot full"><span class="who-posts">投稿者：' + h(state.profile.name) + (state.mode === "sf" ? "（Salesforceのユーザー）" : "") + "</span>" +
+      '<button class="btn primary" type="submit" id="rsubmit">口コミを登録</button><span class="form-error" id="rerr"></span></div></form>';
+  }
+
+  function bindReviewForm(d) {
+    var form = document.getElementById("rform");
+    if (!form) return;
+    var rating = 0, btns = form.querySelectorAll(".star-input button");
+    function paint(n) { btns.forEach(function (b) { var v = Number(b.dataset.v); b.classList.toggle("on", v <= n); b.setAttribute("aria-checked", String(v === rating)); }); }
+    btns.forEach(function (b) {
+      b.onclick = function () { rating = Number(b.dataset.v); paint(rating); };
+      b.onmouseenter = function () { paint(Number(b.dataset.v)); };
+      b.onmouseleave = function () { paint(rating); };
+    });
+    form.onsubmit = function (e) {
+      e.preventDefault();
+      var text = document.getElementById("rtext").value.trim(), err = document.getElementById("rerr"), btn = document.getElementById("rsubmit");
+      var msgs = [];
+      if (!rating) msgs.push("評価（★1〜5）を選んでください。");
+      if (!text) msgs.push("口コミを入力してください。");
+      if (msgs.length) { err.textContent = msgs.join("\n"); return; }
+      var oppId = document.getElementById("ropp").value;
+      var opp = d.opps.filter(function (o) { return o.id === oppId; })[0];
+      err.textContent = ""; btn.disabled = true; btn.textContent = "登録しています…";
+      src().addReview({ vendorId: d.vendor.id, rating: rating, category: document.getElementById("rcat").value, comment: text, oppId: oppId, oppName: opp ? opp.name : "" })
+        .then(function () {
+          toast(state.mode === "demo" ? "口コミを登録しました（デモのため保存されません）" : "口コミをSalesforceに登録しました");
+          select(d.vendor.id, true);
+          search();
+        })
+        .catch(function (e2) { err.textContent = e2.message; btn.disabled = false; btn.textContent = "口コミを登録"; });
+    };
+  }
+
+  // ---------------- 起動 ----------------
+  window.addEventListener("artisora-session-expired", function () {
+    if (state.mode === "sf") { state.mode = null; renderLogin("Salesforceの接続の有効期限が切れました。もう一度ログインしてください。"); }
+  });
+
+  AppSSO.consumeRedirect().then(function (profile) {
+    if (profile) return start("sf", profile);
+    var s = AppSSO.getSession();
+    if (s) return start("sf", s.profile);
+    renderLogin();
+  }).catch(function (e) { renderLogin(e.message); });
+})();
+</script>
