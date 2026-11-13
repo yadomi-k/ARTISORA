@@ -109,6 +109,24 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 0.75rem 1rem; align-items: end; }
 .form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.625rem; padding-top: 0.25rem; }
 .btn.wide { min-width: 10rem; }
+details.multi { position: relative; }
+details.multi summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; min-height: 2.125rem;
+  font-size: 0.8125rem; padding: 0.4375rem 1.75rem 0.4375rem 0.5rem; border: 1px solid var(--color-border); border-radius: 0.5rem; background: var(--color-surface);
+}
+details.multi summary::-webkit-details-marker { display: none; }
+details.multi summary::after { content: ""; position: absolute; right: 0.75rem; top: 0.875rem; width: 0.375rem; height: 0.375rem; border-right: 1.5px solid var(--color-text-dim); border-bottom: 1.5px solid var(--color-text-dim); transform: rotate(45deg); }
+details.multi[open] summary::after { top: 1.0625rem; transform: rotate(-135deg); }
+details.multi.has summary { border-color: var(--color-accent); background: var(--color-accent-dim); color: var(--color-accent); font-weight: 600; }
+.multi-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.multi-panel {
+  position: absolute; z-index: 15; left: 0; right: 0; top: calc(100% + 0.25rem); min-width: 12rem; max-height: 16rem; overflow-y: auto;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0.5rem; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12); padding: 0.375rem;
+}
+.multi-opt { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.5rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; color: var(--color-text); }
+.multi-opt:hover { background: #f4f6f9; }
+.multi-opt input { margin: 0; }
+.link-btn { border: none; background: none; color: var(--color-accent); font-size: 0.75rem; text-decoration: underline; padding: 0.375rem 0.5rem; }
 .sub-line { font-size: 0.7rem; color: var(--color-text-dim); margin-top: 0.125rem; }
 .pill { display: inline-block; font-size: 0.7rem; padding: 0.0625rem 0.4375rem; margin: 0 0.25rem 0.25rem 0; border-radius: 0.3125rem; background: #f0f2f5; color: #3a3f47; white-space: nowrap; }
 dl.attrs { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem 1.25rem; }
@@ -540,12 +558,14 @@ window.AppSF = (function () {
       }
       if (filter.family) where.push("Family = " + AppSSO.soqlString(filter.family));
       if (filter.activeOnly) where.push("IsActive = true");
+      // 同じ項目の中で選んだ値は「どれか」、項目どうしは「すべて」
       m.filters.forEach(function (f) {
-        var v = filter.attrs[f.key];
-        if (!v || !f.api) return;
-        if (f.type === "multipicklist") where.push(f.api + " INCLUDES (" + AppSSO.soqlString(v) + ")");
+        var vals = filter.attrs[f.key] || [];
+        if (!vals.length || !f.api) return;
+        var list = vals.map(AppSSO.soqlString).join(", ");
+        if (f.type === "multipicklist") where.push(f.api + " INCLUDES (" + list + ")");
         else if (f.type === "boolean") where.push(f.api + " = true");
-        else where.push(f.api + " = " + AppSSO.soqlString(v));
+        else where.push(f.api + " IN (" + list + ")");
       });
       var soql = "SELECT " + selectFields(m).join(", ") + " FROM Product2" + (where.length ? " WHERE " + where.join(" AND ") : "") + " ORDER BY Name LIMIT 200";
       return AppSSO.query(soql).then(function (rows) { return rows.map(function (p) { return mapVendor(m, p); }); });
@@ -740,9 +760,10 @@ window.AppDemo = (function () {
         if (f.family && v.family !== f.family) return false;
         if (f.activeOnly && !v.active) return false;
         return META.filters.every(function (ft) {
-          var want = f.attrs[ft.key];
-          if (!want) return true;
-          return String(v.attrs[ft.api] || "").split(";").indexOf(want) >= 0;
+          var want = f.attrs[ft.key] || [];
+          if (!want.length) return true;
+          var has = String(v.attrs[ft.api] || "").split(";");
+          return want.some(function (w) { return has.indexOf(w) >= 0; });
         });
       }).map(strip));
     },
@@ -917,6 +938,50 @@ window.AppDemo = (function () {
       "</select></label>";
   }
 
+  // 複数選択（開くとチェックボックスの一覧）
+  function multiHtml(f, values) {
+    values = values || [];
+    var opts = f.options || [];
+    return '<div class="field"><span id="lb_' + f.key + '">' + h(f.label) + "</span>" +
+      '<details class="multi" data-key="' + f.key + '"><summary aria-labelledby="lb_' + f.key + ' sm_' + f.key + '"><span class="multi-text" id="sm_' + f.key + '">' + h(multiText(f, values)) + "</span></summary>" +
+      '<div class="multi-panel" role="group" aria-labelledby="lb_' + f.key + '">' +
+      (opts.length ? opts.map(function (o, i) {
+        return '<label class="multi-opt"><input type="checkbox" name="fl_' + f.key + '" value="' + h(o.value) + '"' + (values.indexOf(o.value) >= 0 ? " checked" : "") + "> " + h(o.label) + "</label>";
+      }).join("") : '<div class="muted small">選択肢がありません</div>') +
+      (opts.length > 1 ? '<button type="button" class="link-btn multi-clear">選択を外す</button>' : "") +
+      "</div></details></div>";
+  }
+  function multiText(f, values) {
+    if (!values.length) return "指定なし";
+    var map = {};
+    (f.options || []).forEach(function (o) { map[o.value] = o.label; });
+    return values.map(function (v) { return map[v] || v; }).join("、");
+  }
+  function checkedValues(key) {
+    return Array.prototype.map.call(document.querySelectorAll('input[name="fl_' + key + '"]:checked'), function (x) { return x.value; });
+  }
+  function bindMulti(form) {
+    var all = form.querySelectorAll("details.multi");
+    all.forEach(function (d) {
+      var f = state.meta.filters.filter(function (x) { return x.key === d.dataset.key; })[0];
+      var update = function () { d.querySelector(".multi-text").textContent = multiText(f, checkedValues(f.key)); d.classList.toggle("has", checkedValues(f.key).length > 0); };
+      update();
+      d.addEventListener("change", update);
+      var clr = d.querySelector(".multi-clear");
+      if (clr) clr.onclick = function () { d.querySelectorAll("input").forEach(function (x) { x.checked = false; }); update(); };
+      // 1つ開いたら他は閉じる
+      d.addEventListener("toggle", function () { if (d.open) all.forEach(function (o) { if (o !== d) o.open = false; }); });
+    });
+  }
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || e.target.closest("details.multi")) return;
+    document.querySelectorAll("details.multi[open]").forEach(function (d) { d.open = false; });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll("details.multi[open]").forEach(function (d) { d.open = false; d.querySelector("summary").focus(); });
+  });
+
   function renderSearch(el) {
     var f = state.filter, m = state.meta;
     var body;
@@ -927,12 +992,12 @@ window.AppDemo = (function () {
       var cats = m.filters.filter(function (x) { return !x.missing && x.label !== "対応エリア"; });
       var area = m.filters.filter(function (x) { return !x.missing && x.label === "対応エリア"; })[0];
       body =
-        '<form id="sform" class="search-form">' +
+        '<form id="sform" class="search-form">' + '<p class="muted small" style="margin:0">取扱区分・対応エリアは複数選べます。同じ項目の中はどれかに当てはまるもの、項目どうしはすべてに当てはまるものを探します。</p>' +
         '<div class="form-block"><label class="field"><span>キーワード（発注先名・コード）</span><input type="search" id="kw" value="' + h(f.keyword) + '" placeholder="例：印刷、V-0001"></label></div>' +
         '<div class="form-block"><div class="block-title">取扱区分</div><div class="filter-grid">' +
-        cats.map(function (x) { return selectHtml("fl_" + x.key, x.label, x.options || [], f.attrs[x.key] || ""); }).join("") + "</div></div>" +
+        cats.map(function (x) { return multiHtml(x, f.attrs[x.key]); }).join("") + "</div></div>" +
         '<div class="form-block"><div class="block-title">その他の条件</div><div class="filter-grid">' +
-        (area ? selectHtml("fl_" + area.key, area.label, area.options || [], f.attrs[area.key] || "") : "") +
+        (area ? multiHtml(area, f.attrs[area.key]) : "") +
         (m.families.length ? selectHtml("fam", "ファミリ", m.families, f.family) : "") +
         selectHtml("rate", "評価", [{ value: "3", label: "★3以上" }, { value: "4", label: "★4以上" }, { value: "4.5", label: "★4.5以上" }], f.minRating) +
         '<label class="check"><input type="checkbox" id="act"' + (f.activeOnly ? " checked" : "") + "> 有効な発注先のみ</label>" +
@@ -949,23 +1014,22 @@ window.AppDemo = (function () {
       '<span class="card-sub">条件を選んで「検索する」を押してください。内製部門は表示しません。</span></div><div class="card-body">' + body + "</div></section>";
     var form = document.getElementById("sform");
     if (!form) return;
+    bindMulti(form);
     form.onsubmit = function (e) { e.preventDefault(); readFilter(); search(); go("results", true); };
     document.getElementById("clearBtn").onclick = function () { state.filter = emptyFilter(); renderView(); };
   }
   function readFilter() {
     var val = function (id) { var x = document.getElementById(id); return x ? x.value : ""; };
     var attrs = {};
-    state.meta.filters.forEach(function (x) { var v = val("fl_" + x.key); if (v) attrs[x.key] = v; });
+    state.meta.filters.forEach(function (x) { var v = checkedValues(x.key); if (v.length) attrs[x.key] = v; });
     state.filter = { keyword: val("kw").trim(), family: val("fam"), minRating: val("rate"), activeOnly: document.getElementById("act").checked, attrs: attrs };
   }
   function conditionChips() {
     var f = state.filter, chips = [];
     if (f.keyword) chips.push("「" + f.keyword + "」");
     (state.meta ? state.meta.filters : []).forEach(function (x) {
-      var v = f.attrs[x.key];
-      if (!v) return;
-      var o = (x.options || []).filter(function (o) { return o.value === v; })[0];
-      chips.push(x.label + "：" + (o ? o.label : v));
+      var v = f.attrs[x.key] || [];
+      if (v.length) chips.push(x.label + "：" + multiText(x, v));
     });
     if (f.family) chips.push("ファミリ：" + f.family);
     if (f.minRating) chips.push("★" + f.minRating + "以上");
