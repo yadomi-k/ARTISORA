@@ -108,3 +108,14 @@ a { color: var(--primary); }
 .loading { color: var(--muted); padding: 24px 0; text-align: center; }
 .error-box { color: var(--danger); padding: 12px; border: 1px solid var(--danger); border-radius: 8px; }
 .nowrap { white-space: nowrap; }
+
+.user-box { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+.user-box form { margin: 0; }
+.btn.small { padding: 4px 12px; font-size: 12px; }
+.btn.large { display: inline-block; padding: 10px 28px; font-size: 15px; text-decoration: none; }
+.login-view { display: flex; justify-content: center; padding: 72px 16px; }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 36px 32px; text-align: center; width: 100%; max-width: 420px; }
+.login-card h2 { margin: 0 0 8px; font-size: 22px; }
+.login-card p { color: var(--text-2); }
+.login-card .form-error { margin: 0 0 12px; }
+.posted-as { font-size: 12px; color: var(--muted); margin-right: auto; }

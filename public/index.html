@@ -10,9 +10,22 @@
   <header class="app-header">
     <h1>業者検索</h1>
     <span id="modeBadge" class="badge" hidden>デモデータ表示中</span>
+    <div class="user-box" id="userBox" hidden>
+      <span id="userName"></span>
+      <form method="post" action="/auth/logout" id="logoutForm"><button type="submit" class="btn small">ログアウト</button></form>
+    </div>
   </header>
 
-  <main class="layout">
+  <section class="login-view" id="loginView" hidden>
+    <div class="login-card">
+      <h2>業者検索</h2>
+      <p>Salesforce のアカウントでログインしてください。</p>
+      <p class="form-error" id="loginError"></p>
+      <a class="btn primary large" href="/auth/login">Salesforce でログイン</a>
+    </div>
+  </section>
+
+  <main class="layout" id="appView" hidden>
     <section class="panel search-panel" aria-label="検索">
       <form id="searchForm" class="search-form">
         <label class="field grow">

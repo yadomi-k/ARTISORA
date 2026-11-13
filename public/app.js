@@ -17,6 +17,7 @@
   async function api(url, options) {
     const res = await fetch(url, options);
     const body = await res.json().catch(() => ({}));
+    if (res.status === 401) { showLogin(body.error); throw new Error(body.error || 'ログインしてください。'); }
     if (!res.ok) throw new Error(body.error || `通信エラー (${res.status})`);
     return body;
   }
@@ -93,7 +94,6 @@
   function renderDetail(d) {
     const v = d.vendor;
     const usageTotal = d.currentUsages.reduce((s, u) => s + u.cost, 0);
-    const oppCount = new Set(d.currentUsages.map((u) => u.opportunityId)).size;
     $('#detail').innerHTML = `
       <div class="detail-head">
         <div>
@@ -115,7 +115,7 @@
       <h3 class="section">年度別の利用状況<small>直近${d.yearlyStats.length}年度</small></h3>
       <div class="charts">
         <div class="chart-card">
-          <h4>利用回数</h4><div class="sub">利用した商談の件数（回）</div>
+          <h4>利用回数</h4><div class="sub">商談商品の件数（回）</div>
           <div class="chart" id="chartCount"></div>
         </div>
         <div class="chart-card">
@@ -143,7 +143,7 @@
             </tbody>
           </table>
         </div>
-        <div class="usage-total">${oppCount}件の商談 ／ 合計 ${yen(usageTotal)}</div>`
+        <div class="usage-total">${d.currentUsages.length}件 ／ 合計 ${yen(usageTotal)}</div>`
         : '<div class="no-usage">直近の利用はありませんでした</div>'}
 
       <h3 class="section">口コミ<small>${d.reviewCount}件</small></h3>
@@ -170,8 +170,6 @@
 
   // ---------- ② 口コミ入力 ----------
   function reviewFormHtml(d) {
-    let author = '';
-    try { author = localStorage.getItem('reviewAuthor') || ''; } catch (_) {}
     return `
       <form class="review-form" id="reviewForm" novalidate>
         <div class="field full">
@@ -188,14 +186,12 @@
             ${d.relatedOpportunities.map((o) => `<option value="${h(o.id)}">${h(date(o.usageDate))} ${h(o.name)}</option>`).join('')}
           </select>
         </label>
-        <label class="field"><span>投稿者名 <span style="color:var(--danger)">*</span></span>
-          <input type="text" name="author" maxlength="50" value="${h(author)}">
-        </label>
         <label class="field full"><span>口コミ <span style="color:var(--danger)">*</span></span>
           <textarea name="comment" maxlength="2000" placeholder="品質・納期・対応など、次に依頼する人の参考になる内容を書いてください"></textarea>
         </label>
         <div class="form-actions full">
           <span class="form-error" id="reviewError"></span>
+          <span class="posted-as">投稿者：${h(meta.user.name)}</span>
           <button type="submit" class="btn primary">口コミを投稿</button>
         </div>
       </form>`;
@@ -216,7 +212,7 @@
       const f = new FormData(form);
       const opp = d.relatedOpportunities.find((o) => o.id === f.get('opportunityId'));
       const payload = {
-        rating, category: f.get('category'), comment: f.get('comment'), author: f.get('author'),
+        rating, category: f.get('category'), comment: f.get('comment'),
         opportunityId: opp ? opp.id : null, opportunityName: opp ? opp.name : null,
       };
       const err = $('#reviewError');
@@ -226,7 +222,6 @@
         await api(`/api/vendors/${encodeURIComponent(d.vendor.id)}/reviews`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         });
-        try { localStorage.setItem('reviewAuthor', payload.author || ''); } catch (_) {}
         toast('口コミを投稿しました');
         await selectVendor(d.vendor.id, true);
         search();
@@ -236,15 +231,34 @@
     });
   }
 
+  // ---------- ログイン ----------
+  function showLogin(message) {
+    $('#appView').hidden = true; $('#userBox').hidden = true; $('#loginView').hidden = false;
+    $('#loginError').textContent = message && message !== 'ログインしてください。' ? message : '';
+  }
+
   // ---------- 初期化 ----------
   (async function init() {
+    const params = new URLSearchParams(location.search);
+    if (params.has('loginError')) {
+      history.replaceState(null, '', '/');
+      showLogin(params.get('loginError'));
+      return;
+    }
     try {
       meta = await api('/api/meta');
+      $('#appView').hidden = false;
       $('#modeBadge').hidden = meta.mode !== 'mock';
+      $('#userName').textContent = meta.user.name + ' さん';
+      $('#userBox').hidden = false;
+      $('#logoutForm').hidden = meta.mode === 'mock';
       const sel = $('#searchForm select[name=family]');
       meta.families.forEach((f) => sel.insertAdjacentHTML('beforeend', `<option value="${h(f.value)}">${h(f.label)}</option>`));
     } catch (e) {
-      $('#resultBody').innerHTML = `<tr><td colspan="6"><div class="error-box">${h(e.message)}</div></td></tr>`;
+      if ($('#loginView').hidden) {
+        $('#appView').hidden = false;
+        $('#resultBody').innerHTML = `<tr><td colspan="6"><div class="error-box">${h(e.message)}</div></td></tr>`;
+      }
       return;
     }
     search();
