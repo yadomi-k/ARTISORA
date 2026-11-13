@@ -1,0 +1,17 @@
+{
+  "name": "vendor-search",
+  "version": "1.0.0",
+  "description": "業者検索アプリ（Salesforce 発注先・実績・口コミ）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "private": true
+}
